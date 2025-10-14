@@ -21,12 +21,24 @@ snap_targets = [
 # Scene プロパティ登録
 def init_properties():
     for target, _, _ in snap_targets:
-        setattr(bpy.types.Scene, f"snap_{target}", bpy.props.BoolProperty(name=target, default=False))
+        setattr(bpy.types.Scene, f"snap_{target}", bpy.props.BoolProperty(name=target, default=True))
+
+    # ✅ Snap切り替え時に自動でSnapを有効にするオプション
+    bpy.types.Scene.snap_auto_enable = bpy.props.BoolProperty(
+        name="切り替え時にSnapを有効にする",
+        description="Snap Targetを切り替えると自動的にスナップをONにします",
+        default=True
+    )
+
 
 def clear_properties():
     for target, _, _ in snap_targets:
         if hasattr(bpy.types.Scene, f"snap_{target}"):
             delattr(bpy.types.Scene, f"snap_{target}")
+
+    if hasattr(bpy.types.Scene, "snap_auto_enable"):
+        delattr(bpy.types.Scene, "snap_auto_enable")
+
 
 # -----------------------------
 # Snap Target 切り替えオペレーター
@@ -64,8 +76,14 @@ class SNAP_OT_next_target(bpy.types.Operator):
         # 切り替え（set にして代入）
         tool.snap_elements = {next_target}  # set 型
 
+        # ✅ Snap自動有効化がONならスナップをONにする
+        if scene.snap_auto_enable:
+            tool.use_snap = True
+            print("Snapを有効にしました")
+
         self.report({"INFO"}, f"Snap Target を {next_target} に変更")
         return {'FINISHED'}
+
 
 # -----------------------------
 # Ctrl+Shift+Tab 無効化オペレーター
@@ -130,16 +148,23 @@ class SNAP_PT_panel(bpy.types.Panel):
         layout = self.layout
         scene = context.scene
 
+        box = layout.box()
+        box.label(text="切り替えする対象")
+
         # Snap Target チェックボックス
         for target, label, _ in snap_targets:
-            layout.prop(scene, f"snap_{target}", text=label)
-        
+            box.prop(scene, f"snap_{target}", text=label)
+            
         layout.separator()
         layout.operator("view3d.snap_next_target", text="Next Snap Target")
 
         layout.separator()
-        # Ctrl+Shift+Tab 無効化ボタン
         layout.operator("snap.disable_ctrlshift_tab", text="Disable Ctrl+Shift+Tab (Snapping)")
+
+        layout.separator()
+        # ✅ 新オプション（スナップ自動ON設定）
+        layout.prop(scene, "snap_auto_enable")
+
 
 # -----------------------------
 # 登録 / 解除
