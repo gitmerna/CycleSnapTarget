@@ -8,15 +8,25 @@ bl_info = {
     "category": "3D View",
 }
 
+
 import bpy
+import bpy.app.translations as translations
+
 
 # Snap Target のみ列挙
 snap_targets = [
+    ("INCREMENT", "Increment", ""),
     ("GRID", "Grid", ""),
     ("VERTEX", "Vertex", ""),
     ("EDGE", "Edge", ""),
     ("FACE", "Face", ""),
+    ("VOLUME", "Volume", ""),
+    ("EDGE_MIDPOINT", "Edge Center", ""),
+    ("EDGE_PERPENDICULAR", "Edge Perpendicular", ""),
+    ("FACE_PROJECT", "Face Project", ""),
+    ("FACE_NEAREST", "Face Nearest", ""),
 ]
+
 
 # Scene プロパティ登録
 def init_properties():
@@ -25,7 +35,7 @@ def init_properties():
 
     # ✅ Snap切り替え時に自動でSnapを有効にするオプション
     bpy.types.Scene.snap_auto_enable = bpy.props.BoolProperty(
-        name="切り替え時にSnapを有効にする",
+        name="Enable Snap on Target Switch",
         description="Snap Targetを切り替えると自動的にスナップをONにします",
         default=True
     )
@@ -90,7 +100,7 @@ class SNAP_OT_next_target(bpy.types.Operator):
 # -----------------------------
 class SNAP_OT_disable_ctrlshift_tab(bpy.types.Operator):
     bl_idname = "snap.disable_ctrlshift_tab"
-    bl_label = "Disable Ctrl+Shift+Tab (VIEW3D_PT_snapping)"
+    bl_label = "[Ctrl+Shift+Tab] (Disable Snapping)"
 
     def execute(self, context):
         wm = bpy.context.window_manager
@@ -147,29 +157,63 @@ class SNAP_PT_panel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
+        tr = bpy.app.translations.pgettext
 
-        box = layout.box()
-        box.label(text="切り替えする対象")
+        #-----------------------------------------------------
+        # Snap Target 切り替えボックス
+        #-----------------------------------------------------
+        box1 = layout.box()
+        box1.label(text="Snap Targets switching targets")
 
-        # Snap Target チェックボックス
         icon_map = {
-            "GRID": "SNAP_INCREMENT",
+            "INCREMENT": "SNAP_INCREMENT",
+            "GRID": "SNAP_GRID",
             "VERTEX": "SNAP_VERTEX",
             "EDGE": "SNAP_EDGE",
             "FACE": "SNAP_FACE_CENTER",
+            "VOLUME": "SNAP_VOLUME",
+            "EDGE_MIDPOINT": "SNAP_MIDPOINT",
+            "EDGE_PERPENDICULAR": "SNAP_PERPENDICULAR",
+            "FACE_PROJECT": "SNAP_FACE",
+            "FACE_NEAREST": "SNAP_FACE_NEAREST",
         }
+
         for target, label, _ in snap_targets:
-            box.prop(scene, f"snap_{target}", text=label, icon=icon_map.get(target, 'NONE'))
-                        
-        layout.separator()
-        layout.operator("view3d.snap_next_target", text="Next Snap Target")
+            box1.prop(scene, f"snap_{target}", text=label, icon=icon_map.get(target, 'NONE'))
 
-        layout.separator()
-        layout.operator("snap.disable_ctrlshift_tab", text="Disable Ctrl+Shift+Tab (Snapping)")
+        box1.separator()
+        box4 = box1.box()
+        box4.operator("view3d.snap_next_target", text=tr("Next Snap Target"))
 
-        layout.separator()
-        # ✅ 新オプション（スナップ自動ON設定）
-        layout.prop(scene, "snap_auto_enable")
+        #-----------------------------------------------------
+        # ショートカット設定ボックス
+        #-----------------------------------------------------
+        box2 = layout.box()
+        box2.label(text="Set Shortcut")
+        box2.label(text="(Disable Snapping)")
+        box2.operator("snap.disable_ctrlshift_tab", text=tr("[Ctrl+Shift+Tab]"))
+
+        #-----------------------------------------------------
+        # オプション設定ボックス
+        #-----------------------------------------------------
+        box3 = layout.box()
+        box3.label(text="Options")
+        box3.prop(scene, "snap_auto_enable")
+
+
+# ----------------------------------------------------
+# 翻訳辞書
+# ----------------------------------------------------
+translation_dict = {
+    "ja_JP": {
+        ("*", "Snap Target Switcher"): "スナップターゲット切り替え",
+        ("*", "Next Snap Target"): "次のスナップターゲットへ切り替え",
+        ("*", "Set Shortcut"): "ショートカット設定",
+        ("*", "Snap Targets switching targets"): "切り替え対象",
+        ("*", "(Disable Snapping)"): "(Snappingショートカット解除付)",
+        ("*", "Enable Snap on Target Switch"): "切り替え時にSnapを有効にする",
+    },
+}
 
 
 # -----------------------------
@@ -181,11 +225,13 @@ def register():
     init_properties()
     for cls in classes:
         bpy.utils.register_class(cls)
+    translations.register(__name__, translation_dict)
 
 def unregister():
     clear_properties()
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+    translations.unregister(__name__)
 
 if __name__ == "__main__":
     register()
