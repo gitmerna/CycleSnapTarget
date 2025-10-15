@@ -183,22 +183,27 @@ class SNAP_PT_panel(bpy.types.Panel):
 
         box1.separator()
         box4 = box1.box()
-        box4.operator("view3d.snap_next_target", text=tr("Next Snap Target"))
+        col1 = box4.column(align=True)
+        col1.label(text="You can assign a shortcut")
+        col1.label(text="from the right-click menu on the button")
+        col1.operator("view3d.snap_next_target", text=tr("Next Snap Target"))
 
         #-----------------------------------------------------
         # ショートカット設定ボックス
         #-----------------------------------------------------
         box2 = layout.box()
-        box2.label(text="Set Shortcut")
-        box2.label(text="(Disable Snapping)")
-        box2.operator("snap.disable_ctrlshift_tab", text=tr("[Ctrl+Shift+Tab]"))
+        col2 = box2.column(align=True)
+        col2.label(text="Set Shortcut")
+        col2.label(text="(Disable Snapping)")
+        col2.operator("snap.disable_ctrlshift_tab", text=tr("[Ctrl+Shift+Tab]"))
 
         #-----------------------------------------------------
         # オプション設定ボックス
         #-----------------------------------------------------
         box3 = layout.box()
-        box3.label(text="Options")
-        box3.prop(scene, "snap_auto_enable")
+        col3 = box3.column(align=True)
+        col3.label(text="Options")
+        col3.prop(scene, "snap_auto_enable")
 
 
 # ----------------------------------------------------
@@ -212,6 +217,8 @@ translation_dict = {
         ("*", "Snap Targets switching targets"): "切り替え対象",
         ("*", "(Disable Snapping)"): "(Snappingショートカット解除付)",
         ("*", "Enable Snap on Target Switch"): "切り替え時にSnapを有効にする",
+        ("*", "You can assign a shortcut"): "ボタン上で右クリックメニューから",
+        ("*", "from the right-click menu on the button"): "ショートカットを登録できます",
     },
 }
 
