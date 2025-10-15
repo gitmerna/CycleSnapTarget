@@ -152,9 +152,15 @@ class SNAP_PT_panel(bpy.types.Panel):
         box.label(text="切り替えする対象")
 
         # Snap Target チェックボックス
+        icon_map = {
+            "GRID": "SNAP_INCREMENT",
+            "VERTEX": "SNAP_VERTEX",
+            "EDGE": "SNAP_EDGE",
+            "FACE": "SNAP_FACE_CENTER",
+        }
         for target, label, _ in snap_targets:
-            box.prop(scene, f"snap_{target}", text=label)
-            
+            box.prop(scene, f"snap_{target}", text=label, icon=icon_map.get(target, 'NONE'))
+                        
         layout.separator()
         layout.operator("view3d.snap_next_target", text="Next Snap Target")
 
